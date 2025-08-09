@@ -1,121 +1,232 @@
-# Compras-Reno
+# Compras Reno - Sistema de Gestão de Compras
 
-Sistema de gestão de compras e cotações com integração WhatsApp e Supabase
+## Versão 2.0.0
 
-## 📋 Sobre o Projeto
+Sistema completo de gestão de compras com automação de cotações via WhatsApp, integração com Google Maps para busca de fornecedores e interface moderna desenvolvida em React + TypeScript.
 
-O Compras-Reno é uma aplicação completa para gestão de compras, cotações e fornecedores, desenvolvida com tecnologias modernas e integração com WhatsApp para automação de processos.
+## 🚀 Principais Funcionalidades
 
-## 🚀 Funcionalidades
+### ✅ Gestão de Itens
+- Cadastro completo de itens com categorias
+- Controle de quantidade e unidades de medida
+- Busca automática de fornecedores via Google Maps
+- Solicitação de fotos de produtos
+- Importação em lote via CSV/Excel
 
-- **Lista de Compras Inteligente**: Gestão completa de itens com categorização, subcategorização, marcas e modelos
-- **Gestão de Fornecedores**: Cadastro completo com informações de contato, avaliações e histórico
-- **Sistema de Cotações**: Automação de solicitação de cotações via WhatsApp
-- **Gestão de Pedidos**: Controle completo do fluxo de pedidos
-- **Dashboard Analytics**: Visão geral de métricas e indicadores
-- **Integração WhatsApp**: Comunicação automatizada com fornecedores
-- **Busca Google Places**: Localização automática de fornecedores
+### 🏪 Gestão de Fornecedores
+- Cadastro detalhado com informações de contato
+- Categorização por tipo de produto
+- Integração com Google Places API
+- Histórico de cotações e desempenho
+
+### 💰 Sistema de Cotações
+- Envio automático via WhatsApp Business API
+- Processamento inteligente de respostas
+- Comparação automática de preços
+- Agendamento de cotações
+- Histórico completo de cotações
+
+### 📱 Automação WhatsApp
+- Integração com Evolution API
+- Templates personalizáveis de mensagens
+- Processamento de respostas com IA
+- Monitoramento de status de entrega
+- Confirmação automática de pedidos
+
+### 📊 Dashboard e Relatórios
+- Visão geral de itens e fornecedores
+- Histórico de cotações
+- Análise de desempenho de fornecedores
+- Estatísticas de economia
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **UI/UX**: Tailwind CSS + shadcn/ui
-- **Backend**: Supabase (PostgreSQL + Edge Functions)
-- **Autenticação**: Supabase Auth
-- **Integração**: WhatsApp Business API
-- **Mapas**: Google Places API
-- **Formulários**: React Hook Form + Zod
-- **Estado**: TanStack Query
+### Frontend
+- **React 18** - Biblioteca principal
+- **TypeScript** - Tipagem estática
+- **Vite** - Build tool e dev server
+- **Tailwind CSS** - Framework CSS
+- **Radix UI** - Componentes acessíveis
+- **Lucide React** - Ícones
+- **React Router** - Roteamento
+- **React Hook Form** - Gerenciamento de formulários
 
-## 📦 Instalação
+### Backend & Database
+- **Supabase** - Backend as a Service
+- **PostgreSQL** - Banco de dados
+- **Row Level Security (RLS)** - Segurança de dados
+- **Real-time subscriptions** - Atualizações em tempo real
 
-### Pré-requisitos
+### APIs & Integrações
+- **Evolution API** - WhatsApp Business
+- **Google Places API** - Busca de fornecedores
+- **Google Maps API** - Geolocalização
+- **OpenAI API** - Processamento de linguagem natural
+
+## 📋 Pré-requisitos
 
 - Node.js 18+ 
 - npm ou yarn
 - Conta Supabase
-- WhatsApp Business API (opcional)
-- Google Places API Key (opcional)
+- Chaves de API do Google (Places, Maps)
+- Instância Evolution API configurada
+- Conta OpenAI (opcional, para IA)
 
-### Configuração
+## 🚀 Instalação e Configuração
 
-1. **Clone o repositório**
+### 1. Clone o repositório
 ```bash
 git clone https://github.com/renoribeiro/Compras-Reno.git
 cd Compras-Reno
 ```
 
-2. **Instale as dependências**
+### 2. Instale as dependências
 ```bash
 npm install
 ```
 
-3. **Configure as variáveis de ambiente**
-```bash
-cp .env.example .env.local
-```
+### 3. Configure as variáveis de ambiente
+Crie um arquivo `.env.local` na raiz do projeto:
 
-Edite o arquivo `.env.local` com suas credenciais:
 ```env
+# Supabase
 VITE_SUPABASE_URL=sua_url_supabase
 VITE_SUPABASE_ANON_KEY=sua_chave_anonima_supabase
+
+# Google APIs
 VITE_GOOGLE_PLACES_API_KEY=sua_chave_google_places
+VITE_GOOGLE_MAPS_API_KEY=sua_chave_google_maps
+
+# Evolution API
+VITE_EVOLUTION_API_URL=url_da_sua_instancia_evolution
+VITE_EVOLUTION_API_KEY=chave_da_evolution_api
+
+# OpenAI (opcional)
+VITE_OPENAI_API_KEY=sua_chave_openai
 ```
 
-4. **Execute o projeto**
+### 4. Configure o banco de dados
+Execute as migrações SQL no Supabase:
+
+```sql
+-- Criar tabelas principais
+CREATE TABLE suppliers (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  category TEXT,
+  contact TEXT,
+  email TEXT,
+  phone TEXT,
+  address TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE items (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  category TEXT NOT NULL,
+  brand TEXT,
+  model TEXT,
+  quantity INTEGER DEFAULT 1,
+  unit_of_measure TEXT,
+  estimated_price DECIMAL(10,2),
+  min_quantity INTEGER,
+  supplier_id UUID REFERENCES suppliers(id),
+  supplier_name TEXT,
+  needs_supplier_search BOOLEAN DEFAULT false,
+  requires_photo BOOLEAN DEFAULT false,
+  photo_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Adicionar RLS (Row Level Security)
+ALTER TABLE suppliers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE items ENABLE ROW LEVEL SECURITY;
+
+-- Políticas de segurança (ajuste conforme necessário)
+CREATE POLICY "Users can view their own data" ON suppliers
+  FOR ALL USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Users can view their own data" ON items
+  FOR ALL USING (auth.uid() IS NOT NULL);
+```
+
+### 5. Inicie o servidor de desenvolvimento
 ```bash
 npm run dev
 ```
 
-## 🗄️ Estrutura do Banco de Dados
+A aplicação estará disponível em `http://localhost:8080`
 
-O projeto utiliza Supabase com as seguintes tabelas principais:
+## 📱 Configuração do WhatsApp
 
-- `items` - Itens da lista de compras
-- `suppliers` - Fornecedores
-- `quotes` - Cotações
-- `orders` - Pedidos
-- `quote_items` - Itens das cotações
-- `order_items` - Itens dos pedidos
+### Evolution API
+1. Configure uma instância da Evolution API
+2. Conecte seu WhatsApp Business
+3. Configure os webhooks para receber respostas
+4. Teste o envio de mensagens
+
+### Templates de Mensagem
+Personalize os templates em `src/config/messageTemplates.ts`
+
+## 🔧 Configuração do Google
+
+### Google Places API
+1. Ative a API no Google Cloud Console
+2. Crie credenciais (chave de API)
+3. Configure as restrições de uso
+
+### Google Maps API
+1. Ative a API no Google Cloud Console
+2. Configure a mesma chave ou crie uma nova
+3. Ative os serviços necessários (Geocoding, Places)
+
+## 📊 Estrutura do Projeto
+
+```
+src/
+├── components/          # Componentes React reutilizáveis
+│   ├── ui/             # Componentes base (Radix UI)
+│   ├── dashboard/      # Componentes do dashboard
+│   ├── shopping/       # Componentes da lista de compras
+│   ├── suppliers/      # Componentes de fornecedores
+│   └── quotes/         # Componentes de cotações
+├── hooks/              # Custom hooks
+├── pages/              # Páginas da aplicação
+├── types/              # Definições de tipos TypeScript
+├── utils/              # Funções utilitárias
+├── services/           # Serviços de API
+├── contexts/           # Contextos React
+└── integrations/       # Integrações externas
+```
+
+## 🔐 Segurança
+
+- Autenticação via Supabase Auth
+- Row Level Security (RLS) no banco de dados
+- Validação de dados com Zod
+- Sanitização de inputs
+- Rate limiting nas APIs
 
 ## 🚀 Deploy
 
-### Supabase
-1. Crie um projeto no [Supabase](https://supabase.com)
-2. Execute as migrações em `supabase/migrations/`
-3. Configure as Edge Functions
+### Vercel (Recomendado)
+1. Conecte o repositório no Vercel
+2. Configure as variáveis de ambiente
+3. Deploy automático a cada push
 
-### Frontend
-O projeto pode ser deployado em:
-- Vercel
-- Netlify
-- GitHub Pages
-- Qualquer provedor que suporte aplicações React
+### Netlify
+1. Conecte o repositório no Netlify
+2. Configure as variáveis de ambiente
+3. Build command: `npm run build`
+4. Publish directory: `dist`
 
-## 📱 Funcionalidades Principais
+## 📝 Contribuição
 
-### Lista de Compras
-- Cadastro de itens com informações detalhadas
-- Categorização e subcategorização
-- Controle de quantidade e unidades
-- Preços estimados
-- Fornecedores preferenciais
-
-### Gestão de Fornecedores
-- Cadastro completo com dados de contato
-- Avaliações e histórico de cotações
-- Integração com Google Places
-- Status de verificação
-
-### Sistema de Cotações
-- Criação automática de cotações
-- Envio via WhatsApp
-- Acompanhamento de status
-- Comparação de preços
-
-## 🤝 Contribuição
-
-1. Faça um fork do projeto
+1. Fork o projeto
 2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
 3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
 4. Push para a branch (`git push origin feature/AmazingFeature`)
@@ -125,15 +236,12 @@ O projeto pode ser deployado em:
 
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
-## 👨‍💻 Autor
-
-**Reno Ribeiro**
-- GitHub: [@renoribeiro](https://github.com/renoribeiro)
-
 ## 📞 Suporte
 
-Para suporte, abra uma issue no GitHub ou entre em contato através do email.
+Para suporte, entre em contato:
+- Email: renoribeiro@github.com
+- GitHub Issues: [Criar Issue](https://github.com/renoribeiro/Compras-Reno/issues)
 
 ---
 
-⭐ Se este projeto te ajudou, considere dar uma estrela no repositório!
+**Desenvolvido com ❤️ por Reno Ribeiro**
